@@ -1,0 +1,79 @@
+[
+  {
+    "id": 1,
+    "name": "Alice Thompson",
+    "company": "Acme Corp",
+    "email": "alice.thompson@acmecorp.com",
+    "title": "Director of Engineering",
+    "relationship_type": "former_colleague",
+    "connection_strength": "strong",
+    "last_contact": "2023-12-10",
+    "notes": "Worked together at previous company for 3 years"
+  },
+  {
+    "id": 2,
+    "name": "Bob Wilson",
+    "company": "TechStart Inc",
+    "email": "bob.wilson@techstart.com",
+    "title": "Senior Developer",
+    "relationship_type": "university_friend",
+    "connection_strength": "medium",
+    "last_contact": "2023-11-15",
+    "notes": "College roommate, stays in touch occasionally"
+  },
+  {
+    "id": 3,
+    "name": "Carol Davis",
+    "company": "DataFlow Systems",
+    "email": "carol.davis@dataflow.com",
+    "title": "VP of Operations",
+    "relationship_type": "industry_contact",
+    "connection_strength": "medium",
+    "last_contact": "2023-10-20",
+    "notes": "Met at industry conference, exchanged business cards"
+  },
+  {
+    "id": 4,
+    "name": "Emma Foster",
+    "company": "CloudVision Ltd",
+    "email": "emma.foster@cloudvision.com",
+    "title": "Senior Manager",
+    "relationship_type": "mutual_connection",
+    "connection_strength": "weak",
+    "last_contact": "2023-09-05",
+    "notes": "Connected through LinkedIn mutual friend"
+  },
+  {
+    "id": 5,
+    "name": "Frank Miller",
+    "company": "GlobalTech Solutions",
+    "email": "frank.miller@globaltech.com",
+    "title": "Sales Director",
+    "relationship_type": "former_client",
+    "connection_strength": "strong",
+    "last_contact": "2023-12-01",
+    "notes": "Former client, maintains good relationship"
+  },
+  {
+    "id": 6,
+    "name": "Grace Lee",
+    "company": "StartupHub",
+    "email": "grace.lee@startuphub.com",
+    "title": "Founder",
+    "relationship_type": "mentor",
+    "connection_strength": "strong",
+    "last_contact": "2024-01-05",
+    "notes": "Business mentor, regular monthly calls"
+  },
+  {
+    "id": 7,
+    "name": "Henry Kim",
+    "company": "InnovateLab",
+    "email": "henry.kim@innovatelab.com",
+    "title": "Co-founder",
+    "relationship_type": "investor_network",
+    "connection_strength": "medium",
+    "last_contact": "2023-11-30",
+    "notes": "Met through investor network events"
+  }
+]

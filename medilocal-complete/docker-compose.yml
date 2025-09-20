@@ -1,0 +1,148 @@
+version: '3.8'
+
+services:
+  # Ollama AI Model Server
+  ollama:
+    image: ollama/ollama:latest
+    container_name: medilocal-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - medilocal-network
+
+  # n8n Workflow Automation
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: medilocal-n8n
+    ports:
+      - "5679:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5679
+      - GENERIC_TIMEZONE=Europe/Berlin
+      - N8N_DEFAULT_LOCALE=de
+      - N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./workflows:/workflows:ro
+      - ./n8n-init:/init:ro
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    networks:
+      - medilocal-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: medilocal-postgres
+    environment:
+      - POSTGRES_DB=medilocal
+      - POSTGRES_USER=medilocal
+      - POSTGRES_PASSWORD=medilocal2024
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - medilocal-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: medilocal-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - medilocal-network
+
+  # MediLocal Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: medilocal-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://medilocal:medilocal2024@postgres:5432/medilocal
+      - REDIS_URL=redis://redis:6379
+      - N8N_URL=http://n8n:5678
+      - OLLAMA_URL=http://ollama:11434
+      - ENVIRONMENT=production
+      - SECRET_KEY=your-secret-key-change-in-production
+    volumes:
+      - ./backend/app:/app
+      - backend_logs:/app/logs
+    depends_on:
+      - postgres
+      - redis
+      - n8n
+      - ollama
+    restart: unless-stopped
+    networks:
+      - medilocal-network
+
+  # MediLocal Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: medilocal-frontend
+    ports:
+      - "3001:80"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+      - VITE_N8N_URL=http://localhost:5678
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - medilocal-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: medilocal-nginx
+    ports:
+      - "8080:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+      - n8n
+    restart: unless-stopped
+    networks:
+      - medilocal-network
+
+volumes:
+  ollama_data:
+  n8n_data:
+  postgres_data:
+  redis_data:
+  backend_logs:
+
+networks:
+  medilocal-network:
+    driver: bridge

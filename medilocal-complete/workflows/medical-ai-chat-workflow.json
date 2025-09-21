@@ -1,0 +1,127 @@
+{
+  "name": "Medical AI Chat - HTTP Request",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-chat-http",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Medical AI Chat Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "ai-chat-http"
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:3b",
+        "prompt": "=Du bist ein medizinischer KI-Assistent für deutsche Ärzte. Antworte auf Deutsch und professionell.\n\nPatientenanfrage: {{ $json.message }}\n\nBitte gib eine hilfreiche, medizinisch fundierte Antwort auf Deutsch. Erwähne immer, dass dies eine KI-Unterstützung ist und keine professionelle medizinische Beratung ersetzt.",
+        "options": {
+          "temperature": 0.7,
+          "maxTokens": 500
+        }
+      },
+      "id": "ollama-node",
+      "name": "Ollama LLM",
+      "type": "n8n-nodes-base.ollama",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "credentials": {
+        "ollamaApi": {
+          "id": "ollama-local",
+          "name": "Ollama Local"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"response\": \"{{ $json.response }}\",\n  \"timestamp\": \"{{ new Date().toISOString() }}\",\n  \"model\": \"llama3.2:3b\",\n  \"status\": \"success\"\n}"
+      },
+      "id": "response-node",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.message }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "validation-node",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [350, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"error\": \"Nachricht ist erforderlich\",\n  \"timestamp\": \"{{ new Date().toISOString() }}\",\n  \"status\": \"error\"\n}"
+      },
+      "id": "error-response-node",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [350, 450]
+    }
+  ],
+  "connections": {
+    "Medical AI Chat Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Ollama LLM",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama LLM": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "versionId": "1",
+  "meta": {
+    "instanceId": "medilocal-n8n"
+  }
+}
